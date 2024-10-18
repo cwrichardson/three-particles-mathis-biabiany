@@ -1,7 +1,7 @@
 'use client';
 
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View as DreiView, OrbitControls } from '@react-three/drei';
+import { View as DreiView, OrbitControls, Stats } from '@react-three/drei';
 
 import { Box } from 'styled-system/jsx';
 import { Three } from '@/utils/three';
@@ -25,6 +25,7 @@ const View = forwardRef(({ children, orbit, ...props}, ref) => {
                 <DreiView track={localRef}>
                     {children}
                     {orbit && <OrbitControls />}
+                    <Stats />
                 </DreiView>
             </Three>
         </>

@@ -1,6 +1,6 @@
 export const vertex = /* glsl */ `
     uniform float uMove;
-    uniform vec3 uMouse;
+    uniform vec2 uMouse; // projected mouse position
     uniform sampler2D uT1;
     uniform sampler2D uT2;
     uniform float uTime;
@@ -8,7 +8,9 @@ export const vertex = /* glsl */ `
     varying vec2 vCoordinates;
     varying vec2 vUv;
 
+    // attributes are per-point
     attribute vec3 aCoordinates;
+    // randomness: poitive or negative 1
     attribute float aDirection;
     attribute float aOffset;
     attribute float aPress;
@@ -38,7 +40,7 @@ export const vertex = /* glsl */ `
         vec3 stable = position;
 
         // physics change for when mouse is around
-        float dist = distance(stable, uMouse);
+        float dist = distance(stable.xy, uMouse);
         float area = 1. - smoothstep(0., 150., dist);
 
         stable.x += 50. * sin(uTime * aPress ) * aDirection * area;

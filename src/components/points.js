@@ -1,9 +1,9 @@
 'use client';
 
 import { forwardRef, useRef } from 'react';
-import { DoubleSide, Vector3 } from 'three';
+import { DoubleSide, Vector2 } from 'three';
 import { useFrame } from '@react-three/fiber';
-import { Bvh, useTexture } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 
 import { vertex } from '@/glsl/vertex';
 import { fragment } from '@/glsl/fragment';
@@ -18,57 +18,66 @@ export const Points = forwardRef((props, ref) => {
         vertices
     } = props;
     const shaderRef = useRef();
+    const testRef = useRef();
     
     const canTexture = useTexture('/cans.png');
     const imposterTexture = useTexture('/imposter.webp');
     const maskTexture = useTexture('/particle_mask.jpg');
     
     useFrame((state, delta, xrFrame) => {
-        // do animation
-        shaderRef.current.uniforms.uTime.value = state.clock.elapsedTime;
+        /* 
+         * Instead of using onPointerMove event, we do our calculations
+         * here, because the event is very expensive with points (calculating
+         * a new ray to each point).
+         * 
+         * This also helps because there could be several pointer position
+         * changes per frame, and we don't need to do those additional
+         * calculations.
+         */
+        const { raycaster } = state;
+        const hovered = raycaster.intersectObjects([testRef.current]);
+
+        if (hovered.length) {
+            shaderRef.current.uniforms.uTime.value += delta;
+            shaderRef.current.uniforms.uMouse.value.x = hovered[0].point.x;
+            shaderRef.current.uniforms.uMouse.value.y = hovered[0].point.y;
+        }
     })
 
-    const pointerMoveHandler = ((e) => {
-        e.stopPropagation();
-        shaderRef.current.uniforms.uMouse.value = e.point;
-    })
     
     return (
-        <Bvh>
-            <points ref={ref} onPointerMove={pointerMoveHandler}>
-            {/* <points ref={ref} onPointerMove={() => {}}> */}
-            {/* <points ref={ref} onClick={() => {}}> */}
-            {/* <points ref={ref}> */}
+        <>
+            <points ref={ref}>
                 <bufferGeometry
                     width={1}
                     height={1}
                     widthSegments={1}
                     heightSegments={1}
-                >
+                    >
                     <bufferAttribute
                         attach={'attributes-position'}
                         args={[vertices, 3]}
-                    />
+                        />
                     <bufferAttribute
                         attach={'attributes-aCoordinates'}
                         args={[coordinates, 3]}
-                    />
+                        />
                     <bufferAttribute
                         attach={'attributes-aSpeed'}
                         args={[speeds, 1]}
-                    />
+                        />
                     <bufferAttribute
                         attach={'attributes-aOffset'}
                         args={[offsets, 1]}
-                    />
+                        />
                     <bufferAttribute
                         attach={'attributes-aDirection'}
                         args={[direction, 1]}
-                    />
+                        />
                     <bufferAttribute
                         attach={'attributes-aPress'}
                         args={[press, 1]}
-                    />
+                        />
                 </bufferGeometry>
                 <shaderMaterial
                     ref={shaderRef}
@@ -77,7 +86,7 @@ export const Points = forwardRef((props, ref) => {
                     }}
                     uniforms={{
                         uMask: { value: maskTexture },
-                        uMouse: { value: new Vector3(0, 0, 0) },
+                        uMouse: { value: new Vector2(0,0) },
                         uMove: { value: 0 },
                         uT1: { value: canTexture },
                         uT2: { value: imposterTexture },
@@ -89,9 +98,14 @@ export const Points = forwardRef((props, ref) => {
                     depthTest={false}
                     depthWrite={false}
                     transparent
-                />
+                    />
             </points>
-        </Bvh>
+            {/* Invisible geometry to catch our raycaster */}
+            <mesh ref={testRef}>
+                <planeGeometry args={[1000, 1000]} />
+                <meshBasicMaterial transparent opacity={0.0} depthWrite={false} />
+            </mesh>
+        </>
     )
 })
 

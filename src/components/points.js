@@ -24,6 +24,7 @@ export const Points = forwardRef((props, ref) => {
     const canTexture = useTexture('/cans.png');
     const imposterTexture = useTexture('/imposter.webp');
     const maskTexture = useTexture('/particle_mask.jpg');
+    const textures = [ canTexture, imposterTexture ];
     
     useFrame((state, delta, xrFrame) => {
         /* 
@@ -37,11 +38,8 @@ export const Points = forwardRef((props, ref) => {
          */
         const { raycaster } = state;
         const hovered = raycaster.intersectObjects([testRef.current]);
-        // console.log(state);
-        // console.log(delta);
 
         if (hovered.length) {
-            // console.log(hovered[0])
             shaderRef.current.uniforms.uTime.value += delta;
             shaderRef.current.uniforms.uMouse.value.x = hovered[0].point.x;
             shaderRef.current.uniforms.uMouse.value.y = hovered[0].point.y;
@@ -63,6 +61,23 @@ export const Points = forwardRef((props, ref) => {
     }
 
     function wheel(e) {
+        /*
+         * Use floor and modulus arithmatic to swap the order of the
+         * textures when we cross a whole integer boundary in move,
+         * because the fragment shader is transitioning based on the
+         * fractional amount, and when we cross an integer boundary,
+         * the mix "jumps".
+         * 
+         * Add 1000 to each because mouse position can be negative.
+         */
+        const move = shaderRef.current.uniforms.uMove.value;
+        console.log(move);
+        const next = Math.floor(move + 1000) % 2;
+        const prev = Math.floor(move + 1000) % 2 + 1;
+
+        shaderRef.current.uniforms.uT1.value = textures[prev];
+        shaderRef.current.uniforms.uT2.value = textures[next];
+
         shaderRef.current.uniforms.uMove.value += e.deltaY / 4000;
     }
     

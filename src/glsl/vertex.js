@@ -5,6 +5,7 @@ export const vertex = /* glsl */ `
     uniform sampler2D uT1;
     uniform sampler2D uT2;
     uniform float uTime;
+    uniform float uTransition;
 
     varying vec2 vCoordinates;
     varying vec2 vUv;
@@ -47,6 +48,9 @@ export const vertex = /* glsl */ `
         stable.x += 50. * sin(uTime * aPress ) * aDirection * area * uMousePressed;
         stable.y += 50. * sin(uTime * aPress ) * aDirection * area * uMousePressed;
         stable.z += 200. * cos(uTime * aPress ) * aDirection * area * uMousePressed;
+
+        // TRANSITION
+        pos = mix(pos, stable, uTransition);
 
         vec4 mvPosition = modelViewMatrix * vec4( pos, 1. );
         // start with big particles; give them some perspective

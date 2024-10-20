@@ -8,6 +8,7 @@ import { useTexture } from '@react-three/drei';
 import { vertex } from '@/glsl/vertex';
 import { fragment } from '@/glsl/fragment';
 import gsap from 'gsap';
+import { useControls } from 'leva';
 
 export const Points = forwardRef((props, ref) => {
     const {
@@ -25,6 +26,18 @@ export const Points = forwardRef((props, ref) => {
     const imposterTexture = useTexture('/imposter.webp');
     const maskTexture = useTexture('/particle_mask.jpg');
     const textures = [ canTexture, imposterTexture ];
+    const { transition }  = useControls({
+        transition: {
+            value: 0,
+            min: 0,
+            max: 1,
+            /* use transition variable to pick the texture */
+            // this has to be updated here, not in useFrame &shrug; 
+            onChange: (v) => {
+                shaderRef.current.uniforms.uTransition.value = v
+            }
+        }
+    });
     
     useFrame((state, delta, xrFrame) => {
         /* 
@@ -127,7 +140,8 @@ export const Points = forwardRef((props, ref) => {
                         uMove: { value: 0 },
                         uT1: { value: canTexture },
                         uT2: { value: imposterTexture },
-                        uTime: { value: 0 }
+                        uTime: { value: 0 },
+                        uTransition: { value: 0 }
                     }}
                     vertexShader={vertex}
                     fragmentShader={fragment}

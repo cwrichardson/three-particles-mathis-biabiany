@@ -67,8 +67,8 @@ export function Model(props) {
 
 
     return (
-        <View orbit {...props}>
-        {/* <View {...props}> */}
+        // <View orbit {...props}>
+        <View {...props}>
             <Suspense fallback={null}>
                 <Points
                     coordinates={coordinates}

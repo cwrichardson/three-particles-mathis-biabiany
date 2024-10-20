@@ -13,7 +13,7 @@ export const fragment = /* glsl */ `
         vec4 tt1 = texture2D(uT1, myUv);
         vec4 tt2 = texture2D(uT2, myUv);
 
-        vec4 final = mix(tt1, tt2, fract(uMove));
+        vec4 final = mix(tt1, tt2, smoothstep(0., 1., fract(uMove)));
 
         // gl_FragColor = vec4(vCoordinates.x / 512. , vCoordinates.y / 512. , 0., 1.);
         gl_FragColor = final;

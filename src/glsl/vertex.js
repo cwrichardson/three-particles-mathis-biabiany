@@ -1,6 +1,7 @@
 export const vertex = /* glsl */ `
     uniform float uMove;
     uniform vec2 uMouse; // projected mouse position
+    uniform float uMousePressed; // ease in/out factor
     uniform sampler2D uT1;
     uniform sampler2D uT2;
     uniform float uTime;
@@ -31,10 +32,10 @@ export const vertex = /* glsl */ `
         // pos.z = mod(position.z + aOffset, 2000.);
         // we're only seeing 1/2 the particles, because they're past the
         // camera, so subtract 1,000
-        pos.z = mod(position.z + aOffset, 2000.) - 1000.;
+        pos.z = mod(position.z + uMove * 200. * aSpeed + aOffset, 2000.) - 1000.;
         // add a little wobble
-        pos.x += sin(aSpeed) * 3.;
-        pos.y += sin(aSpeed) * 3.;
+        pos.x += sin(uMove * aSpeed) * 3.;
+        pos.y += sin(uMove * aSpeed) * 3.;
 
         // STABLE
         vec3 stable = position;
@@ -43,13 +44,13 @@ export const vertex = /* glsl */ `
         float dist = distance(stable.xy, uMouse);
         float area = 1. - smoothstep(0., 150., dist);
 
-        stable.x += 50. * sin(uTime * aPress ) * aDirection * area;
-        stable.y += 50. * sin(uTime * aPress ) * aDirection * area;
-        stable.z += 200. * cos(uTime * aPress ) * aDirection * area;
+        stable.x += 50. * sin(uTime * aPress ) * aDirection * area * uMousePressed;
+        stable.y += 50. * sin(uTime * aPress ) * aDirection * area * uMousePressed;
+        stable.z += 200. * cos(uTime * aPress ) * aDirection * area * uMousePressed;
 
-        vec4 mvPosition = modelViewMatrix * vec4( stable, 1. );
+        vec4 mvPosition = modelViewMatrix * vec4( pos, 1. );
         // start with big particles; give them some perspective
-        gl_PointSize = 200. * ( 1. / - mvPosition.z );
+        gl_PointSize = 400. * ( 1. / - mvPosition.z );
         gl_Position = projectionMatrix * mvPosition;
 
         vCoordinates = aCoordinates.xy;

@@ -7,6 +7,7 @@ import { useTexture } from '@react-three/drei';
 
 import { vertex } from '@/glsl/vertex';
 import { fragment } from '@/glsl/fragment';
+import gsap from 'gsap';
 
 export const Points = forwardRef((props, ref) => {
     const {
@@ -36,14 +37,34 @@ export const Points = forwardRef((props, ref) => {
          */
         const { raycaster } = state;
         const hovered = raycaster.intersectObjects([testRef.current]);
+        // console.log(state);
+        // console.log(delta);
 
         if (hovered.length) {
+            // console.log(hovered[0])
             shaderRef.current.uniforms.uTime.value += delta;
             shaderRef.current.uniforms.uMouse.value.x = hovered[0].point.x;
             shaderRef.current.uniforms.uMouse.value.y = hovered[0].point.y;
         }
     })
 
+    function mouseDown() {
+        gsap.to(shaderRef.current.uniforms.uMousePressed, {
+            duration: 0.5,
+            value: 1
+        })
+    }
+
+    function mouseUp() {
+        gsap.to(shaderRef.current.uniforms.uMousePressed, {
+            duration: 0.5,
+            value: 0
+        })
+    }
+
+    function wheel(e) {
+        shaderRef.current.uniforms.uMove.value += e.deltaY / 4000;
+    }
     
     return (
         <>
@@ -87,6 +108,7 @@ export const Points = forwardRef((props, ref) => {
                     uniforms={{
                         uMask: { value: maskTexture },
                         uMouse: { value: new Vector2(0,0) },
+                        uMousePressed: { value: 0 },
                         uMove: { value: 0 },
                         uT1: { value: canTexture },
                         uT2: { value: imposterTexture },
@@ -101,7 +123,7 @@ export const Points = forwardRef((props, ref) => {
                     />
             </points>
             {/* Invisible geometry to catch our raycaster */}
-            <mesh ref={testRef}>
+            <mesh ref={testRef} onPointerDown={mouseDown} onPointerUp={mouseUp} onWheel={wheel}>
                 <planeGeometry args={[1000, 1000]} />
                 <meshBasicMaterial transparent opacity={0.0} depthWrite={false} />
             </mesh>
